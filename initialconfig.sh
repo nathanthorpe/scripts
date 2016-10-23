@@ -36,6 +36,8 @@ EOF
 	# ifconfig eth0 up
 	# ifconfig eth0 $staticip netmask $netmask
 	# route add default gw $gateway
+
+
 	echo -e "[*] Configuring ssh"
 	echo -e "[*] Adding key"
 	if [ -f /root/.ssh/authorized_keys ]; then
@@ -59,16 +61,20 @@ EOF
 	echo 1
 	service ssh restart;
 	echo "[*] Done"
+
 	echo -e "[*] Updating apt/packages"
 	apt-get update
 	apt-get -y upgrade
+
 	echo -e "[*] Installing htop/nano/wget"
 	apt-get -y install htop nano wget
+
 	echo -e "[*] Configuring NTP"
 	apt-get -y install ntp
 	rm /etc/ntp.conf
 	echo "server 10.0.0.2" >> /etc/ntp.conf
 	service ntp restart
+
 	echo -e "[*] Configuring SNMP"
 	read -p "Enter SNMP RO community: " community
 	apt-get -y install snmpd
@@ -82,6 +88,8 @@ EOF
 	curl https://raw.githubusercontent.com/murrant/librenms/9aa4203cc3423eb29c7b8aff16bef661c32cf977/scripts/distro >> /usr/bin/distro
 	chmod +x /usr/bin/distro
 	service snmpd restart
+
+
 	read -r -p "Do you want to install Hyper-V tools [Y/n] " response
 	case "${response}" in
 		[nN][oO]|[nN])
