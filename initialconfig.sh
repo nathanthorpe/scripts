@@ -58,7 +58,6 @@ EOF
 	grep -rl 'PasswordAuthentication' /etc/ssh/sshd_config  | xargs sed -i 's/*.PasswordAuthentication.*/PasswordAuthentication no/g';
 	echo 1
 	service ssh restart;
-	cd ..
 	echo "[*] Done"
 	echo -e "[*] Updating apt/packages"
 	apt-get update
