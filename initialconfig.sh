@@ -8,6 +8,7 @@ if [ "${OS}" = "Debian" ]||[ "${OS}" = "Ubuntu" ]; then
 			;;
 		*)
 			echo -e "[*] Configuring network"
+			# Change these if you don't have DHCP in your environment
 			IP=`hostname | nslookup | awk '/Address/{i++}i==2' | cut -d' ' -f 2`
 			NAMESERVER=`cat /etc/resolv.conf | grep nameserver | cut -d' ' -f 2`
 			DOMAIN=`cat /etc/resolv.conf | grep search | cut -d' ' -f 2`
