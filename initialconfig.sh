@@ -1,6 +1,17 @@
 #!/bin/bash
 OS=`lsb_release -si`
+REBOOT=False
 if [ "${OS}" = "Debian" ]||[ "${OS}" = "Ubuntu" ]; then
+
+	# Updating packages
+	echo -e "[*] Updating apt/packages"
+	apt-get update
+	apt-get -y upgrade
+	# Common Packages
+        echo -e "[*] Installing htop/nano/wget/curl"
+	apt-get -y install curl htop nano wget
+	
+	# Network Configurations
 	read -r -p "Would you like to configure the network [Y/n] " response
 	case "${response}" in
 		[nN][oO]|[nN])
@@ -8,7 +19,10 @@ if [ "${OS}" = "Debian" ]||[ "${OS}" = "Ubuntu" ]; then
 			;;
 		*)
 			echo -e "[*] Configuring network"
-			# Change these if you don't have DHCP in your environment
+			# This does an nslookup on the hostname and then sets the IP based on that
+			# All you have to do is create an A record for the hostname
+			# It grabs gateway/dns/and domain from DHCP so if you don't have DHCP in your environment
+			# Then this needs to be changed.
 			IP=`hostname | nslookup | awk '/Address/{i++}i==2' | cut -d' ' -f 2`
 			NAMESERVER=`cat /etc/resolv.conf | grep nameserver | cut -d' ' -f 2`
 			DOMAIN=`cat /etc/resolv.conf | grep search | cut -d' ' -f 2`
@@ -30,6 +44,9 @@ EOF
 			REBOOT=True
 			;;
 	esac
+	
+	# Uncomment this part if you want manual configuration
+	# This part is not done
 	# read -p "Enter the ip address for your server: " staticip
 	# read -p "Enter the netmask: " netmask
 	# read -p "Enter the IP of gateway: " gateway
@@ -37,8 +54,8 @@ EOF
 	# ifconfig eth0 up
 	# ifconfig eth0 $staticip netmask $netmask
 	# route add default gw $gateway
-
-
+	
+	# SSH Configuration
 	echo -e "[*] Configuring ssh"
 	echo -e "[*] Adding key"
 	if [ -f /root/.ssh/authorized_keys ]; then
@@ -60,22 +77,17 @@ EOF
 	echo 2
 	grep -rl 'PasswordAuthentication' /etc/ssh/sshd_config  | xargs sed -i 's/*.PasswordAuthentication.*/PasswordAuthentication no/g';
 	echo 1
-	service ssh restart;
+	service ssh restart
 	echo "[*] Done"
 
-	echo -e "[*] Updating apt/packages"
-	apt-get update
-	apt-get -y upgrade
-
-	echo -e "[*] Installing htop/nano/wget"
-	apt-get -y install htop nano wget
-
+	# NTP configuration, change the IP to your server or use the NTP Pools
 	echo -e "[*] Configuring NTP"
 	apt-get -y install ntp
 	rm /etc/ntp.conf
 	echo "server 10.0.0.2" >> /etc/ntp.conf
 	service ntp restart
 
+	# SNMP configuration, extend is for LibreNMS
 	echo -e "[*] Configuring SNMP"
 	read -p "Enter SNMP RO community: " community
 	apt-get -y install snmpd
@@ -90,7 +102,7 @@ EOF
 	chmod +x /usr/bin/distro
 	service snmpd restart
 
-
+	# Installs Hyper-V tools
 	read -r -p "Do you want to install Hyper-V tools [Y/n] " response
 	case "${response}" in
 		[nN][oO]|[nN])
@@ -111,12 +123,14 @@ EOF
 			REBOOT=True
 			;;
 	esac
+	# Todo Vmware tools?
 else
 	echo "I can't run this on non-debian based OSes!"
+	# Todo CentOS?
 fi
 if [ REBOOT ]; then
 	echo -e "[*] Rebooting"
-	dhclient -r eth0
+	dhclient -r eth0 # releases IP from DHCP server
 	reboot
 else
 	echo "Done"
